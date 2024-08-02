@@ -8,6 +8,8 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID!;
 const apiKey = process.env.TWILIO_API_KEY!;
@@ -22,7 +24,7 @@ const phoneNumbersHarcoded: string[] = [
     '+16468324592',
 ];
 
-app.get('/generate-numbers', (req: Request, res: Response) => {
+app.get('/get-numbers', (req: Request, res: Response) => {
     res.json(phoneNumbersHarcoded);
 });
 
@@ -101,7 +103,6 @@ app.post('/call-status', async (req: Request, res: Response) => {
         }
     } else {
         console.log('DEBUG: Call not answered by human');
-        // client.calls(callSid).update({ status: 'completed' });
         res.status(200).send('OK');
     }
 });
@@ -109,6 +110,7 @@ app.post('/call-status', async (req: Request, res: Response) => {
 
 app.post('/voice', (req: Request, res: Response) => {
     const twiml = new TwilioTwiml.VoiceResponse();
+    console.log('DEBUG: req.body:', req.body);
 
     if (req.body.AnsweredBy === 'human') {
         const dial = twiml.dial();
