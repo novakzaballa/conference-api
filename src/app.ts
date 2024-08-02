@@ -83,18 +83,13 @@ app.post('/call-status', async (req: Request, res: Response) => {
 
     if (callStatus === 'completed' && answeredBy === 'human') {
         console.log('DEBUG: Call answered by human');
-
+        const twiml = new TwilioTwiml.VoiceResponse();
         try {
             const conferenceName = 'MyConferenceRoom';
 
-            const twiml = new TwilioTwiml.VoiceResponse();
             twiml.dial().conference(conferenceName, {
                 startConferenceOnEnter: true,
                 endConferenceOnExit: false,
-            });
-
-            await client.calls(callBody.id).update({
-                twiml: twiml.toString(),
             });
 
             res.status(200).send({ message: 'Call joined to conference' });
@@ -115,18 +110,11 @@ app.post('/voice', (req: Request, res: Response) => {
     if (req.body.AnsweredBy === 'human') {
         const dial = twiml.dial();
         twiml.say('Hi this is Joe for Regie please stay on the line, while we connect you with one of our agents.');
-        dial.conference('MyConferenceRoom', {
-            startConferenceOnEnter: true,
-            endConferenceOnExit: false,
-        });
     } else if (req.body.AnsweredBy === 'machine_start' || req.body.AnsweredBy === 'fax') {
         twiml.hangup();
     } else {
         twiml.pause({ length: 5 });
-        console.log('DEBUG: req.body:', req.body);
-        // twiml.redirect('/voice');
     }
-
 
 
   res.type('text/xml');
