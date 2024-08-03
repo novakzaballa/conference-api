@@ -137,7 +137,7 @@ export const voiceResponse = async (req: Request, res: Response) => {
     if (req.body.CallStatus === 'in-progress' && req.body.AnsweredBy === 'human') {
         const conferenceName = generateRandomConferenceName();
 
-        twiml.say('Hi this is Joe for Regie, please stay on the line while we connect you with one of our agents.');
+        twiml.say('Hi this is Joe from Regie, please stay on the line while we connect you with one of our agents.');
         twiml.dial().conference(conferenceName, {
             startConferenceOnEnter: true,
             endConferenceOnExit: false,
@@ -151,7 +151,6 @@ export const voiceResponse = async (req: Request, res: Response) => {
             status: req.body.CallStatus,
             answeredBy: req.body.AnsweredBy,
             message: 'Call answered by human and joined to conference',
-            conferenceSid: conference[0].sid
         });
 
     } else if (req.body.AnsweredBy === 'machine_start' || req.body.AnsweredBy === 'fax') {
