@@ -39,6 +39,7 @@ Before we begin local development, we need to collect all the config values we n
 
    ```bash
    npm install
+   npm i --save-dev @types/ws
    ```
 
 5. Launch local development web server.
