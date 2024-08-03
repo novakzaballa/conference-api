@@ -2,10 +2,16 @@ import express, { Request, Response } from 'express';
 import { Twilio, twiml as TwilioTwiml } from 'twilio';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
+import http from 'http';
+import WebSocket from 'ws';
+
 const cors = require('cors');
 
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
@@ -23,6 +29,28 @@ const phoneNumbersHarcoded: string[] = [
     '+17544657460',
     '+16468324592',
 ];
+
+// WebSocket server setup
+wss.on('connection', (ws) => {
+    console.log('Client connected via WebSocket');
+
+    ws.on('message', (message) => {
+        console.log('Received:', message);
+    });
+
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
+});
+
+// Send a message to all connected clients
+const broadcastMessage = (message: any) => {
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(message));
+        }
+    });
+};
 
 app.get('/get-numbers', (req: Request, res: Response) => {
     res.json(phoneNumbersHarcoded);
@@ -73,10 +101,10 @@ app.post('/end-call', async (req: Request, res: Response) => {
     }
 });
 
-
 app.post('/call-status', async (req: Request, res: Response) => {
     const callStatus = req.body.CallStatus;
     const answeredBy = req.body.AnsweredBy;
+    const number = req.body.To;
 
     console.log('DEBUG: Call status', callStatus);
     console.log('DEBUG: Call answered by', answeredBy);
@@ -92,6 +120,14 @@ app.post('/call-status', async (req: Request, res: Response) => {
                 endConferenceOnExit: false,
             });
 
+            broadcastMessage({
+                event: 'call-status',
+                number: number,
+                status: callStatus,
+                answeredBy: answeredBy,
+                message: 'Call answered by human and joined to conference'
+            });
+
             res.status(200).send({ message: 'Call joined to conference' });
         } catch (error) {
             res.status(500).send({ error: 'Failed to join call to conference', details: error.message });
@@ -101,7 +137,6 @@ app.post('/call-status', async (req: Request, res: Response) => {
         res.status(200).send('OK');
     }
 });
-
 
 app.post('/voice', (req: Request, res: Response) => {
     const twiml = new TwilioTwiml.VoiceResponse();
@@ -117,11 +152,11 @@ app.post('/voice', (req: Request, res: Response) => {
     }
 
 
-  res.type('text/xml');
-  res.send(twiml.toString());
+    res.type('text/xml');
+    res.send(twiml.toString());
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
