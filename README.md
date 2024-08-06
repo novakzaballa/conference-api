@@ -52,7 +52,7 @@ Before we begin local development, we need to collect all the config values we n
 7. Expose your application to the wider internet using `ngrok`. This step is **crucial** for the app to work as expected.
 
    ```bash
-   ngrok http 3001
+   ngrok http 3000
    ```
 
 8. `ngrok` will assign a unique URL to your tunnel.
